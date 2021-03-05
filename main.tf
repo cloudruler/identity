@@ -77,7 +77,7 @@ resource "azurerm_key_vault" "kv" {
     iterator = user
     content {
       tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = access_policy.value["object_id"]
+      object_id = user.value["object_id"]
       certificate_permissions = [
         "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
         "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
