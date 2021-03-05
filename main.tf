@@ -13,7 +13,7 @@ data "azuread_users" "keyvault_admin_users" {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-identity-scu"
+  name     = "rg-identity"
   location = var.location
 }
 
