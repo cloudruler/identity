@@ -1,10 +1,15 @@
 provider "azurerm" {
   features {}
 }
+
 data "azurerm_client_config" "current" {}
 
-data "azuread_user" "brian_moore" {
-  user_principal_name = "brian.moore@cloudruler.io"
+# data "azuread_service_principal" "keyvault_admin_spn" {
+#   display_name = var.keyvault_admin_spn
+# }
+
+data "azuread_user" "keyvault_admin_users" {
+  user_principal_names = var.keyvault_admin_users
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -44,40 +49,65 @@ resource "azurerm_key_vault" "kv" {
       "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
     ]
   }
-  #Access Policy for Brian Moore
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azuread_user.brian_moore.object_id
-    certificate_permissions = [
-      "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-      "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-    ]
-    key_permissions = [
-      "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-      "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-    ]
 
-    secret_permissions = [
-      "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-    ]
+  # access_policy {
+  #   tenant_id = data.azurerm_client_config.current.tenant_id
+  #   object_id = data.azuread_service_principal.keyvault_admin_spn.id
+  #   certificate_permissions = [
+  #     "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
+  #     "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
+  #   ]
+  #   key_permissions = [
+  #     "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
+  #     "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
+  #   ]
 
-    storage_permissions = [
-      "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-      "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-    ]
+  #   secret_permissions = [
+  #     "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
+  #   ]
+
+  #   storage_permissions = [
+  #     "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
+  #     "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
+  #   ]
+  # }
+
+  dynamic "access_policy" {
+    for_each = data.azuread_user.keyvault_admins.users
+    iterator = "user"
+    content {
+      tenant_id = data.azurerm_client_config.current.tenant_id
+      object_id = access_policy.value["object_id"]
+      certificate_permissions = [
+        "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
+        "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
+      ]
+      key_permissions = [
+        "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
+        "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
+      ]
+
+      secret_permissions = [
+        "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
+      ]
+
+      storage_permissions = [
+        "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
+        "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
+      ]
+    }
   }
 }
 
-
 #SSH Key
-resource "tls_private_key" "k8s-ssh-key" {
+resource "tls_private_key" "k8s_ssh_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "azurerm_key_vault_secret" "k8s-ssh-key-public-openssh" {
+resource "azurerm_key_vault_secret" "k8s_ssh_key_public_openssh" {
   name         = "k8s-ssh-key-public-openssh"
-  value        = tls_private_key.k8s-ssh-key.public_key_openssh
+  value        = tls_private_key.k8s_ssh_key.public_key_openssh
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
@@ -85,9 +115,9 @@ resource "azurerm_key_vault_secret" "k8s-ssh-key-public-openssh" {
   }
 }
 
-resource "azurerm_key_vault_secret" "k8s-ssh-key-public-pem" {
+resource "azurerm_key_vault_secret" "k8s_ssh_key_public_pem" {
   name         = "k8s-ssh-key-public-pem"
-  value        = tls_private_key.k8s-ssh-key.public_key_pem
+  value        = tls_private_key.k8s_ssh_key.public_key_pem
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
@@ -95,9 +125,9 @@ resource "azurerm_key_vault_secret" "k8s-ssh-key-public-pem" {
   }
 }
 
-resource "azurerm_key_vault_secret" "k8s-ssh-key-private-pem" {
+resource "azurerm_key_vault_secret" "k8s_ssh_key_private_pem" {
   name         = "k8s-ssh-key-private-pem"
-  value        = tls_private_key.k8s-ssh-key.private_key_pem
+  value        = tls_private_key.k8s_ssh_key.private_key_pem
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
