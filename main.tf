@@ -8,7 +8,7 @@ data "azurerm_client_config" "current" {}
 #   display_name = var.keyvault_admin_spn
 # }
 
-data "azuread_user" "keyvault_admin_users" {
+data "azuread_users" "keyvault_admin_users" {
   user_principal_names = var.keyvault_admin_users
 }
 
@@ -73,8 +73,8 @@ resource "azurerm_key_vault" "kv" {
   # }
 
   dynamic "access_policy" {
-    for_each = data.azuread_user.keyvault_admins.users
-    iterator = "user"
+    for_each = data.azuread_users.keyvault_admin_users.users
+    iterator = user
     content {
       tenant_id = data.azurerm_client_config.current.tenant_id
       object_id = access_policy.value["object_id"]
