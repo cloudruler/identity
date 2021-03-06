@@ -18,88 +18,6 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                            = "cloudrulerkvidentity"
-  location                        = azurerm_resource_group.rg.location
-  resource_group_name             = azurerm_resource_group.rg.name
-  sku_name                        = "standard"
-  tenant_id                       = data.azurerm_client_config.current.tenant_id
-  enabled_for_deployment          = true
-  enabled_for_disk_encryption     = true
-  enabled_for_template_deployment = true
-  soft_delete_retention_days      = 90
-  purge_protection_enabled        = true
-
-  access_policy {
-    #Access policy for Azure Infrastructure Automation Service Principal
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-    certificate_permissions = [
-      "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-      "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-    ]
-    key_permissions = [
-      "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-      "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-    ]
-    secret_permissions = [
-      "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-    ]
-    storage_permissions = [
-      "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-      "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-    ]
-  }
-
-  # access_policy {
-  #   tenant_id = data.azurerm_client_config.current.tenant_id
-  #   object_id = data.azuread_service_principal.keyvault_admin_spn.id
-  #   certificate_permissions = [
-  #     "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-  #     "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-  #   ]
-  #   key_permissions = [
-  #     "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-  #     "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-  #   ]
-
-  #   secret_permissions = [
-  #     "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-  #   ]
-
-  #   storage_permissions = [
-  #     "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-  #     "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-  #   ]
-  # }
-
-  dynamic "access_policy" {
-    for_each = data.azuread_users.keyvault_admin_users.users
-    iterator = user
-    content {
-      tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = user.value["object_id"]
-      certificate_permissions = [
-        "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-        "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-      ]
-      key_permissions = [
-        "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-        "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-      ]
-
-      secret_permissions = [
-        "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-      ]
-
-      storage_permissions = [
-        "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-        "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-      ]
-    }
-  }
-}
-
-resource "azurerm_key_vault" "kvnew" {
   name                            = "cloudruler"
   location                        = azurerm_resource_group.rg.location
   resource_group_name             = azurerm_resource_group.rg.name
@@ -183,13 +101,15 @@ resource "azurerm_key_vault" "kvnew" {
 
 #SSH Key
 resource "tls_private_key" "k8s_ssh_key" {
+  count = 0
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 resource "azurerm_key_vault_secret" "k8s_ssh_key_public_openssh" {
+  count = 0
   name         = "k8s-ssh-key-public-openssh"
-  value        = tls_private_key.k8s_ssh_key.public_key_openssh
+  value        = tls_private_key.k8s_ssh_key[0].public_key_openssh
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
@@ -198,8 +118,9 @@ resource "azurerm_key_vault_secret" "k8s_ssh_key_public_openssh" {
 }
 
 resource "azurerm_key_vault_secret" "k8s_ssh_key_public_pem" {
+  count = 0
   name         = "k8s-ssh-key-public-pem"
-  value        = tls_private_key.k8s_ssh_key.public_key_pem
+  value        = tls_private_key.k8s_ssh_key[0].public_key_pem
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
@@ -208,8 +129,9 @@ resource "azurerm_key_vault_secret" "k8s_ssh_key_public_pem" {
 }
 
 resource "azurerm_key_vault_secret" "k8s_ssh_key_private_pem" {
+  count = 0
   name         = "k8s-ssh-key-private-pem"
-  value        = tls_private_key.k8s_ssh_key.private_key_pem
+  value        = tls_private_key.k8s_ssh_key[0].private_key_pem
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
