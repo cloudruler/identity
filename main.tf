@@ -18,7 +18,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                            = "cloudruler"
+  name                            = "cloudrulerkvidentity"
   location                        = azurerm_resource_group.rg.location
   resource_group_name             = azurerm_resource_group.rg.name
   sku_name                        = "standard"
@@ -100,7 +100,7 @@ resource "azurerm_key_vault" "kv" {
 }
 
 resource "azurerm_key_vault" "kvnew" {
-  name                            = "cloudrulerkvidentity"
+  name                            = "cloudruler"
   location                        = azurerm_resource_group.rg.location
   resource_group_name             = azurerm_resource_group.rg.name
   sku_name                        = "standard"
