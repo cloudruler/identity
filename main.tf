@@ -107,7 +107,7 @@ resource "tls_private_key" "ssh_key_cloudruler" {
 }
 
 resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
-  name         = "k8s-ssh-key-private-pem"
+  name         = "ssh-key-cloudruler-private-pem"
   value        = var.generate_keys? tls_private_key.ssh_key_cloudruler[0].private_key_pem : ""
   key_vault_id = azurerm_key_vault.kv.id
 
