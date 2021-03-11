@@ -107,7 +107,7 @@ resource "tls_private_key" "ssh_key_cloudruler" {
 
 resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
   name         = "ssh-key-cloudruler-private-pem"
-  value        = var.generate_keys? tls_private_key.ssh_key_cloudruler.private_key_pem : ""
+  value        = tls_private_key.ssh_key_cloudruler.private_key_pem
   key_vault_id = azurerm_key_vault.kv.id
 }
 
@@ -115,7 +115,7 @@ resource "azurerm_ssh_public_key" "ssh_cloudruler_public_openssh" {
   name                = "ssh-cloudruler"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  public_key          = var.generate_keys? tls_private_key.ssh_key_cloudruler.public_key_openssh : ""
+  public_key          = tls_private_key.ssh_key_cloudruler.public_key_openssh
 }
 
 resource "azurerm_app_configuration" "appcs" {
