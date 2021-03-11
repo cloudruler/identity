@@ -101,30 +101,21 @@ resource "azurerm_key_vault" "kv" {
 
 #SSH Key
 resource "tls_private_key" "ssh_key_cloudruler" {
-  count = var.generate_keys? 1 : 0
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
   name         = "ssh-key-cloudruler-private-pem"
-  value        = var.generate_keys? tls_private_key.ssh_key_cloudruler[0].private_key_pem : ""
+  value        = var.generate_keys? tls_private_key.ssh_key_cloudruler.private_key_pem : ""
   key_vault_id = azurerm_key_vault.kv.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
 }
 
 resource "azurerm_ssh_public_key" "ssh_cloudruler_public_openssh" {
   name                = "ssh-cloudruler"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  public_key          = var.generate_keys? tls_private_key.ssh_key_cloudruler[0].public_key_openssh : ""
-
-  lifecycle {
-    ignore_changes = [public_key]
-  }
+  public_key          = var.generate_keys? tls_private_key.ssh_key_cloudruler.public_key_openssh : ""
 }
 
 resource "azurerm_app_configuration" "appcs" {
