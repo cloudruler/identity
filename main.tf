@@ -19,7 +19,7 @@ resource "azurerm_resource_group" "rg" {
 
 resource "azurerm_key_vault" "kv" {
   name                            = "cloudruler"
-  location                        = azurerm_resource_group.rg.location
+  location                        = var.location
   resource_group_name             = azurerm_resource_group.rg.name
   sku_name                        = "standard"
   tenant_id                       = data.azurerm_client_config.current.tenant_id
@@ -100,38 +100,15 @@ resource "azurerm_key_vault" "kv" {
 }
 
 #SSH Key
-resource "tls_private_key" "k8s_ssh_key" {
-  count = 0
+resource "tls_private_key" "ssh_key_cloudruler" {
+  count = var.generate_keys? 1 : 0
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-resource "azurerm_key_vault_secret" "k8s_ssh_key_public_openssh" {
-  count = 0
-  name         = "k8s-ssh-key-public-openssh"
-  value        = tls_private_key.k8s_ssh_key[0].public_key_openssh
-  key_vault_id = azurerm_key_vault.kv.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "azurerm_key_vault_secret" "k8s_ssh_key_public_pem" {
-  count = 0
-  name         = "k8s-ssh-key-public-pem"
-  value        = tls_private_key.k8s_ssh_key[0].public_key_pem
-  key_vault_id = azurerm_key_vault.kv.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "azurerm_key_vault_secret" "k8s_ssh_key_private_pem" {
-  count = 0
+resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
   name         = "k8s-ssh-key-private-pem"
-  value        = tls_private_key.k8s_ssh_key[0].private_key_pem
+  value        = var.generate_keys? tls_private_key.ssh_key_cloudruler[0].private_key_pem : ""
   key_vault_id = azurerm_key_vault.kv.id
 
   lifecycle {
@@ -139,3 +116,20 @@ resource "azurerm_key_vault_secret" "k8s_ssh_key_private_pem" {
   }
 }
 
+resource "azurerm_ssh_public_key" "ssh_cloudruler_public_openssh" {
+  name                = "ssh-cloudruler"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+  public_key          = var.generate_keys? tls_private_key.ssh_key_cloudruler[0].public_key_openssh : ""
+
+  lifecycle {
+    ignore_changes = [public_key]
+  }
+}
+
+resource "azurerm_app_configuration" "appcs" {
+  name                     = "appcs-cloudruler"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = var.location
+  sku                      = "free"
+}
