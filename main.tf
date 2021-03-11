@@ -17,10 +17,6 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
-data "azurerm_resource_group" "rg" {
-  name = azurerm_resource_group.rg.name
-}
-
 resource "azurerm_key_vault" "kv" {
   name                            = "cloudruler"
   location                        = var.location
@@ -115,9 +111,9 @@ resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
   key_vault_id = azurerm_key_vault.kv.id
 }
 
-resource "azurerm_ssh_public_key" "ssh_cloudruler_public_openssh" {
+resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
   name                = "ssh-cloudruler"
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = UPPER(azurerm_resource_group.rg.name)
   location            = var.location
   public_key          = tls_private_key.ssh_key_cloudruler.public_key_openssh
 }
