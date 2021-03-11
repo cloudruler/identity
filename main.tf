@@ -113,7 +113,7 @@ resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
 
 resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
   name                = "ssh-cloudruler"
-  resource_group_name = UPPER(azurerm_resource_group.rg.name)
+  resource_group_name = upper(azurerm_resource_group.rg.name)
   location            = var.location
   public_key          = tls_private_key.ssh_key_cloudruler.public_key_openssh
 }
