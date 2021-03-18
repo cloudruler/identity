@@ -118,6 +118,15 @@ resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
   public_key          = tls_private_key.ssh_key_cloudruler.public_key_openssh
 }
 
+resource "azurerm_ssh_public_key" "ssh_brianmoore" {
+  name                = "ssh-brianmoore"
+  resource_group_name = upper(azurerm_resource_group.rg.name)
+  location            = var.location
+  public_key          = <<-EOT
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+HxnuN1D7vtkxABtAxRizT2RrUha45M3qBABWKBJAEJqev9gUC0zRxAwW6Eh8lhfv9jKcnekMkOZNPrR/Bx5cuv0hACDxF4nb2trcFTK2IOuaGidk3zld71jQYDnpVes9BSqcMkn9nmx8Nl7p5KPt1foTSezdZq/neiOZ/vV5r8iPmSOwxigYFP2G70P2dMFTY+KyoWDk60WAjr2g6EHSdI4GgR6kghgMAcVuljnseDJVLmYn8I/B2FSXH7APtd0h6J673S8wPZuNzIEYzm/KEobBn0EpnhyqfOjN5VLdNOUGpXb/VPNXeKaB3KoOzEh20FkaVJmNXlN0WKC1hyCl brian@DESKTOP-SFIVOEU
+    EOT
+}
+
 resource "azurerm_app_configuration" "appcs" {
   name                     = "appcs-cloudruler"
   resource_group_name      = azurerm_resource_group.rg.name
