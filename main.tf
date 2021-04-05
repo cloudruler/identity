@@ -99,23 +99,13 @@ resource "azurerm_key_vault" "kv" {
   }
 }
 
-#SSH Key
-resource "tls_private_key" "ssh_key_cloudruler" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "azurerm_key_vault_secret" "ssh_key_cloudruler_private_pem" {
-  name         = "ssh-key-cloudruler-private-pem"
-  value        = tls_private_key.ssh_key_cloudruler.private_key_pem
-  key_vault_id = azurerm_key_vault.kv.id
-}
-
 resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
   name                = "ssh-cloudruler"
   resource_group_name = upper(azurerm_resource_group.rg.name)
   location            = var.location
-  public_key          = tls_private_key.ssh_key_cloudruler.public_key_openssh
+  public_key          = <<-EOT
+    ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC7cOgQda7eyDAWQNPO8vkiaMAFczP8a+Qzkd+RDS75CA7qBGPzi89PPtWkp7U6eXrnIBwuxoud4M8Fr8ikfNhcU5F9MSE64H8sl4NGwMRVkwOp/2hE+23rO/ahLlo5F0O32TByH8wkyuHD3rbKZJS+FtrF0wdlnFb7yuxK18XLCy8Q9Tlc3Mpaeuo46uPvJ1NsBDyATfSzsKQ4fFnFQgD/UMm6S2hduvM0ETJWzDGKQMacMbN/I+DzGKcMgkN09jJjTZuUTBgq032AStfSeLv0CZhoqulmRck+Kj/UMysYPvIEjqiRqQumAKoQHo+7DtNVpRB/2geg+kEuesFhJi1wjSjp++59hHCSjVcwHXbTbdxytwHh1ErTJ/F2uUCHXfQFtNylGPe7qjBG87fNmVkykBgTzprF2UFSdmqkoSnn81h6WBT0Mflskdoo1mQW2HG0HP82nj+dCREz2qCc2mAQeyi9k0JvJJFR/VhXNmPhgftqX9xdBtlQ39zCnkZAlpBJUsjhwD8X7Y25p+Fyu+vNmz3+/qf3TS8NhnT+rE8SJZcfA3ngxf5dSR35IQNw05WN9zogEGpndMTWFgjwODfX8uYHSSwsiw4FFMFI0UAXWbnr/prJ3xwiN8CvEhYwo0rpr3wz7HEzi3LWSgjc4/1j79/Y9HX1ttWR2Gea9s52hw==
+    EOT
 }
 
 resource "azurerm_ssh_public_key" "ssh_brianmoore" {
@@ -128,6 +118,7 @@ resource "azurerm_ssh_public_key" "ssh_brianmoore" {
 }
 
 resource "azurerm_app_configuration" "appcs" {
+  count                    = 0
   name                     = "appcs-cloudruler"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = var.location
@@ -135,12 +126,13 @@ resource "azurerm_app_configuration" "appcs" {
 }
 
 resource "azurerm_storage_account" "st" {
-  name                     = "cloudruleridentity"
+  name                     = "cloudruler"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_kind             = "StorageV2"
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  access_tier              = "Cool"
+  access_tier              = "Hot"
   min_tls_version          = "TLS1_2"
+  enable_https_traffic_only = true
 }
