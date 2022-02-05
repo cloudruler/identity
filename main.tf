@@ -28,75 +28,7 @@ resource "azurerm_key_vault" "kv" {
   enabled_for_template_deployment = true
   soft_delete_retention_days      = 90
   purge_protection_enabled        = true
-
-  access_policy {
-    #Access policy for Azure Infrastructure Automation Service Principal
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-    certificate_permissions = [
-      "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-      "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-    ]
-    key_permissions = [
-      "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-      "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-    ]
-    secret_permissions = [
-      "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-    ]
-    storage_permissions = [
-      "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-      "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-    ]
-  }
-
-  # access_policy {
-  #   tenant_id = data.azurerm_client_config.current.tenant_id
-  #   object_id = data.azuread_service_principal.keyvault_admin_spn.id
-  #   certificate_permissions = [
-  #     "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-  #     "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-  #   ]
-  #   key_permissions = [
-  #     "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-  #     "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-  #   ]
-
-  #   secret_permissions = [
-  #     "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-  #   ]
-
-  #   storage_permissions = [
-  #     "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-  #     "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-  #   ]
-  # }
-
-  dynamic "access_policy" {
-    for_each = data.azuread_users.keyvault_admin_users.users
-    iterator = user
-    content {
-      tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = user.value["object_id"]
-      certificate_permissions = [
-        "Backup", "Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers",
-        "ManageContacts", "ManageIssuers", "Purge", "Recover", "Restore", "SetIssuers", "Update"
-      ]
-      key_permissions = [
-        "Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover",
-        "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"
-      ]
-
-      secret_permissions = [
-        "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
-      ]
-
-      storage_permissions = [
-        "Backup", "Delete", "DeleteSAS", "Get", "GetSAS", "List", "ListSAS",
-        "Purge", "Recover", "RegenerateKey", "Restore", "Set", "SetSAS", "Update"
-      ]
-    }
-  }
+  enable_rbac_authorization       = true
 }
 
 resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
@@ -118,21 +50,21 @@ resource "azurerm_ssh_public_key" "ssh_brianmoore" {
 }
 
 resource "azurerm_app_configuration" "appcs" {
-  count                    = 0
-  name                     = "appcs-cloudruler"
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = var.location
-  sku                      = "free"
+  count               = 0
+  name                = "appcs-cloudruler"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+  sku                 = "free"
 }
 
 resource "azurerm_storage_account" "st" {
-  name                     = "cloudruler"
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
-  account_kind             = "StorageV2"
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  access_tier              = "Hot"
-  min_tls_version          = "TLS1_2"
+  name                      = "cloudruler"
+  resource_group_name       = azurerm_resource_group.rg.name
+  location                  = azurerm_resource_group.rg.location
+  account_kind              = "StorageV2"
+  account_tier              = "Standard"
+  account_replication_type  = "LRS"
+  access_tier               = "Hot"
+  min_tls_version           = "TLS1_2"
   enable_https_traffic_only = true
 }
