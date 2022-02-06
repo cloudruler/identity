@@ -1,10 +1,14 @@
-data "azuread_users" "users" {
-  user_principal_names = ["brianmoore@cloudruler.com"]
+locals {
+  admin_upns = ["brianmoore@cloudruler.com"]
+}
+
+data "azuread_users" "admin_users" {
+  user_principal_names = local.admin_upns
 }
 
 resource "azuread_application" "vault_automation" {
   display_name    = "vault-automation"
-  owners          = data.azuread_users.users.object_ids
+  owners          = data.azuread_users.admin_users.object_ids
   identifier_uris = ["https://infrastructureautomation.cloudruler.com"]
 
   required_resource_access {
@@ -39,5 +43,33 @@ resource "azuread_application" "vault_automation" {
 resource "azuread_service_principal" "vault_automation" {
   application_id               = azuread_application.vault_automation.application_id
   app_role_assignment_required = false
-  owners                       = data.azuread_users.users.object_ids
+  owners                       = data.azuread_users.admin_users.object_ids
+}
+
+data "azurerm_subscription" "current" {
+}
+
+resource "azurerm_role_assignment" "vault_administrator_key_vault_admin" {
+  scope              = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
+  principal_id       = azuread_service_principal.vault_automation.object_id
+}
+
+resource "azurerm_role_assignment" "vault_administrator_key_vault_admin" {
+  scope              = data.azurerm_subscription.current.id
+  role_definition_name = "User Access Administrator"
+  principal_id       = azuread_service_principal.vault_automation.object_id
+}
+
+resource "azurerm_role_assignment" "vault_administrator_key_vault_admin" {
+  scope              = data.azurerm_subscription.current.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id       = azuread_service_principal.vault_automation.object_id
+}
+
+resource "azurerm_role_assignment" "admin_user_key_vault_admin" {
+  for_each = { for user in data.azuread_users.admin_users.users : user.user_principal_name => user }
+  scope              = data.azurerm_subscription.current.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id       = each.value.object_id
 }
