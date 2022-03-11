@@ -1,3 +1,6 @@
+provider "time" {
+}
+
 locals {
   admin_upns = ["brianmoore@cloudruler.com"]
 }
@@ -46,16 +49,28 @@ resource "azuread_service_principal" "vault_automation" {
   owners                       = data.azuread_users.admin_users.object_ids
 }
 
+resource "time_rotating" "vault_automation" {
+  rotation_years = 2
+}
+
+resource "azuread_service_principal_password" "vault_automation" {
+  display_name = "1"
+  service_principal_id = azuread_service_principal.vault_automation.object_id
+  rotate_when_changed = {
+    rotation = time_rotating.vault_automation.id
+  }
+}
+
 data "azurerm_subscription" "current" {
 }
 
-resource "azurerm_role_assignment" "vault_administrator_key_vault_admin" {
+resource "azurerm_role_assignment" "vault_administrator_contributor" {
   scope              = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
   principal_id       = azuread_service_principal.vault_automation.object_id
 }
 
-resource "azurerm_role_assignment" "vault_administrator_key_vault_admin" {
+resource "azurerm_role_assignment" "vault_administrator_user_access_admin" {
   scope              = data.azurerm_subscription.current.id
   role_definition_name = "User Access Administrator"
   principal_id       = azuread_service_principal.vault_automation.object_id
@@ -72,4 +87,11 @@ resource "azurerm_role_assignment" "admin_user_key_vault_admin" {
   scope              = data.azurerm_subscription.current.id
   role_definition_name = "Key Vault Administrator"
   principal_id       = each.value.object_id
+}
+
+resource "azurerm_key_vault_secret" "vault_administrator_secret" {
+  name         = "vault-automation-secret"
+  value        = azuread_service_principal_password.vault_automation.value
+  key_vault_id = azurerm_key_vault.kv.id
+  content_type = "Password for the vault-automation SPN"
 }
