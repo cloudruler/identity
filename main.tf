@@ -29,6 +29,9 @@ resource "azurerm_key_vault" "kv" {
   soft_delete_retention_days      = 90
   purge_protection_enabled        = true
   enable_rbac_authorization       = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_ssh_public_key" "ssh_cloudruler_public" {
@@ -67,4 +70,7 @@ resource "azurerm_storage_account" "st" {
   access_tier               = "Hot"
   min_tls_version           = "TLS1_2"
   enable_https_traffic_only = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
