@@ -46,6 +46,7 @@ provider "registry.terraform.io/hashicorp/time" {
   constraints = "0.7.2"
   hashes = [
     "h1:YYLAfhMFP5nhV2iZPslqsLkZN+6sZo7gMJW7pLcLfM8=",
+    "h1:Z2zNS42oUNtCoXm75OXNgJJ3e0AsxwghpBzTA46scbQ=",
     "zh:0bbe0158c2a9e3f5be911b7e94477586110c51746bb13d102054f22754565bda",
     "zh:3250af7fd49b8aaf2ccc895588af05197d886e38b727e3ba33bcbb8cc96ad34d",
     "zh:35e4de0437f4fa9c1ad69aaf8136413be2369ea607d78e04bb68dc66a6a520b8",

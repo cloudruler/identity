@@ -70,6 +70,9 @@ resource "azurerm_storage_account" "st" {
   access_tier               = "Hot"
   min_tls_version           = "TLS1_2"
   enable_https_traffic_only = true
+  tags                      = {
+    "ms-resource-usage"     = "azure-cloud-shell"
+  }
   lifecycle {
     prevent_destroy = true
   }
